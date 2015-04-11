@@ -76,10 +76,12 @@ function buildArgs(command, commandArgs, urlObj) {
     var auth = urlObj.auth.split(':');
     if (auth[0])
       args.push('--username', auth[0]);
-    if (auth[1]);
+    if (auth[1])
       args.push('--password', auth[1]);
   }
 
+  // The various mongo commands have different conventions
+  // for passing the database; some don't want a database at all.
   var db = urlObj.pathname.replace(/^\//, '');
   var dbArgs = command.db.map (function (s) {
     return (s === "DB") ? db : s;

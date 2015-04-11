@@ -1,0 +1,20 @@
+{
+  "name": "mmongo",
+  "version": "1.0.1",
+  "description": "Conveniently run mongo client tools on a Meteor database.",
+  "bin": { "mmongo": "./mmongo.js" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/skagedal/mmongo.git"
+  },
+  "keywords": [
+    "meteor",
+    "mongo"
+  ],
+  "author": "Simon Kågedal Reimer",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/skagedal/mmongo/issues"
+  },
+  "homepage": "https://github.com/skagedal/mmongo"
+}

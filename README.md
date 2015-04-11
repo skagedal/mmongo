@@ -14,7 +14,12 @@ that's what this tool can help you with (until MongoDB [fixes this][3]).
 
 ## Installation
 
-Put `mmongo.js` somewhere in your `$PATH` as `mmongo`, for example using:
+`mmongo` is available at NPM, so if you use that do:
+
+    npm -g install mmongo
+
+Otherwise, just put `mmongo.js` somewhere in your `$PATH` as `mmongo`,
+for example using:
 
     sudo cp mmongo.js /usr/local/bin/mmongo
     sudo chmod +x /usr/local/bin/mmongo
