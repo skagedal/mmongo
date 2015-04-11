@@ -1,8 +1,9 @@
 # mmongo
 Conveniently run mongo client tools on a Meteor database.
 
-MongoDB includes a (bunch of shell commands)[1] that connect to a database
-server and do things: `mongo`, `mongodump`, `mongorestore` and such.
+MongoDB includes a bunch of shell commands[1] that connect to a database
+server and do things: `mongo`, `mongodump`, `mongorestore`, `mongooplog`,
+`mongoimport`, `mongoexport`, `mongostat`, `mongotop` and `mongofiles`.
 
 To connect to a database, you need to specify the hostname, the port
 and credentials.  Meteor gives you these in form of a MongoDB 
@@ -20,25 +21,38 @@ Put `mmongo.js` somewhere in your `$PATH` as `mmongo`, for example:
 
 ## Usage
 
-Type `mmongo --help` to get these instructions:
+To open up a mongo shell on your meteor database, just like `meteor
+mongo`:
 
-    mmongo [--dry] [COMMAND] [SITE] [ARGS]
-    
-     - Use the --dry flag to see what would've been executed.
-     - COMMAND can be any of:
-         dump
-         restore
-         oplog
-         import
-         export
-         stat
-         top
-         files
-       where "dump", for example, runs the "mongodump" command.
-       No specified command means the "mongo" tool is run.
-     - SITE is a meteor site, or "." for your local site.
-       If you wish to specify further ARGS, you need to give a site
-       or ".".
+    mmongo
+
+On a deployed mongo instance:
+
+    mmongo example.meteor.com
+
+To give arguments (see `mongo --help`), add `run` and then the arguments:
+
+    mmongo example.meteor.com run --eval 'printjson(db.getCollectionNames())'
+
+To run any of the other tools, remove the "mongo"-prefix from that
+command.  For example, to dump a database:
+
+    mmongo example.meteor.com dump
+
+Or export the `tasks` database as a json file:
+
+    mmongo example.meteor.com export -c tasks
+
+I have not tested the `oplog` and `files` tools much.  `stat` and
+`top` do not seem to authenticate on meteor.com sites, but work locally. 
+
+If you wish to see what command would be executed without actually
+running it, use the "--dry" option as the very first argument to
+`mmongo`:
+
+    mmongo --dry example.meteor.com import foo.json
+
+To get a reminder of the arguments, use `mmongo --help`.
 
 ## Fork me
 

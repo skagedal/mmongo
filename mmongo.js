@@ -5,68 +5,88 @@ var child_process = require('child_process');
 var util = require('util');
 
 subcommands = {
-  'dump': { exec: 'mongodump' },
-  'dump': { exec: 'mongodump' },
-  'restore': { exec: 'mongorestore' },
-  'oplog': { exec: 'mongooplog' },
-  'import': { exec: 'mongoimport' },
-  'export': { exec: 'mongoexport' },
-  'stat': { exec: 'mongostat' },
-  'top': { exec: 'mongotop' },
-  'files': { exec: 'mongofiles' }
+  '--help': { help: true },
+  'run': { exec: 'mongo', db: ["DB"] },
+  'dump': { exec: 'mongodump', db: ["--db", "DB"] },
+  'restore': { exec: 'mongorestore', db: ["--db", "DB"] },
+  'import': { exec: 'mongoimport', db: ["--db", "DB"] },
+  'export': { exec: 'mongoexport', db: ["--db", "DB"] },
+  'files': { exec: 'mongofiles', db: ["--db", "DB"] },
+  'oplog': { exec: 'mongooplog', db: ["--db", "DB"] },
+  'stat': { exec: 'mongostat', db: [] },
+  'top': { exec: 'mongotop', db: [] }
 };
 
 function main() {
-  args = process.argv.slice(2);
+  args = parseArgs(process.argv.slice(2));
 
-  if (args[0] == '--help') {
+  if (args.command.help)
     printUsageAndExit();
-  }
 
-  var dryRun = false;
-  if (args[0] == '--dry') {
-    dryRun = true;
-    args.shift();
-  }
+  var mUrl = getMeteorMongoUrl(args.site);
+  var urlObj = url.parse(mUrl);
+  var newArgs = buildArgs (args.command, args.commandArgs, urlObj);
 
-  command = 'mongo';
-  if (args[0] in subcommands) {
-    command = subcommands[args[0]].exec;
-    args.shift();
-  } 
-
-  if (args.length == 0 || args[0] === '.') {
-    mUrl = getMeteorMongoUrl();
+  if (args.dryRun) {
+    var fullCommand = shellQuote([args.command.exec].concat(newArgs));
+    console.log(fullCommand);
+    // console.log([args.command.exec].concat(newArgs));
   } else {
-    mUrl = getMeteorMongoUrl(args[0]);
+    child_process.spawn(args.command.exec, newArgs, { stdio: 'inherit' });
   }
-  args.shift();
+}
 
-  urlObj = url.parse(mUrl);
+function parseArgs(args) {
+  parsedArgs = {};
 
-  var newArgs = ['--host', urlObj.host];
+  // 1. Flags to mmongo
+
+  if (args[0] === '--dry') {
+    parsedArgs.dryRun = true;
+    args.shift();
+  }
+
+  // 2. A site is specified unless we go directly to the command
+
+  if (!(args[0] in subcommands) && args.length > 0) {
+    parsedArgs.site = args[0];
+    args.shift();
+  } else {
+    parsedArgs.site = null;
+  }
+
+  // 3. A subcommand (or "run" if none given)
+
+  if (args[0] in subcommands) {
+    parsedArgs.command = subcommands[args[0]];
+    args.shift();
+  } else {
+    parsedArgs.command = subcommands['run'];
+  }
+
+  // 4. The rest is args to the subcommand
+  parsedArgs.commandArgs = args;
+
+  return parsedArgs;
+}
+
+function buildArgs(command, commandArgs, urlObj) {
+  var args = ['--host', urlObj.host];
   if (typeof urlObj.auth === 'string') {
-    auth = urlObj.auth.split(':');
+    var auth = urlObj.auth.split(':');
     if (auth[0])
-      newArgs.push('--username', auth[0]);
+      args.push('--username', auth[0]);
     if (auth[1]);
-      newArgs.push('--password', auth[1]);
+      args.push('--password', auth[1]);
   }
 
   var db = urlObj.pathname.replace(/^\//, '');
-  if (command === 'mongo')
-    newArgs.push(db);
-  else
-    newArgs.push('--db', db);
+  var dbArgs = command.db.map (function (s) {
+    return (s === "DB") ? db : s;
+  });
+  args = args.concat(dbArgs);
   
-  newArgs = newArgs.concat(args);
-
-  var fullCommand = shellQuote([command].concat(newArgs));
-  if (dryRun) {
-    console.log(fullCommand);
-  } else {
-    child_process.spawn(command, newArgs, { stdio: 'inherit' });
-  }
+  return args.concat(commandArgs);
 }
 
 function getMeteorMongoUrl(site) {
@@ -111,17 +131,27 @@ function shellQuote(xs) {
   }).join(' ');
 }
 
+function repeat(s, n) {
+  return new Array(n + 1).join(s);
+}
+
+function usageCommand(key) {
+  command = subcommands[key].exec;
+  if (!command)
+    return '';
+  return "      " + key + ":" + repeat(" ", 10 - key.length) + 
+    command + "\n";
+}
+
 function printUsageAndExit() {
   console.log(
-    "Usage: mmongo [--dry] [COMMAND] [SITE] [ARGS]\n\n"+
+    'Usage: mmongo [--dry | --help] [SITE] [COMMAND] [ARGS]\n\n'+
     " - Use the --dry flag to see what would've been executed.\n" +
-    " - COMMAND can be any of:\n" +
-    Object.keys(subcommands).map(function(s){return ("     "+s)}).join("\n") + "\n" +
-    '   where "dump", for example, runs the "mongodump" command.\n' +
-    '   No specified command means the "mongo" tool is run.\n' +
-    ' - SITE is a meteor site, or "." for your local site.\n' +
-    '   If you wish to specify further ARGS, you need to give a site\n' +
-    '   or ".".\n'
+    ' - SITE is a meteor site, like "example.meteor.com".\n' +
+    '   To access the local site, put nothing here.\n' + 
+    ' - COMMAND can be any of:\n' +
+    Object.keys(subcommands).map(usageCommand).join("") +
+    ' - ARGS is any arguments to that command.\n'
   );
   process.exit(0);
 }
