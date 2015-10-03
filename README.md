@@ -14,6 +14,9 @@ that's what this tool can help you with (until MongoDB [fixes this][3]).
 
 ## Installation
 
+`mmongo` requires an installation of Node.js 0.12.  It does not use the 
+Node.js that comes bundled with Meteor.
+
 `mmongo` is available at NPM, so if you use that do:
 
     npm -g install mmongo
