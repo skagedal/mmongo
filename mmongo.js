@@ -27,6 +27,10 @@ function main() {
   var urlObj = url.parse(mUrl);
   var newArgs = buildArgs (args.command, args.commandArgs, urlObj);
 
+  if (process.platform === 'win32') {
+	  args.command.exec += '.bat';
+  }
+
   if (args.dryRun) {
     var fullCommand = shellQuote([args.command.exec].concat(newArgs));
     console.log(fullCommand);
@@ -96,7 +100,14 @@ function getMeteorMongoUrl(site) {
   if (site)
     args.push(site);
 
-  var ret = child_process.spawnSync('meteor', args);
+  var ret;
+  
+  if (process.platform === 'win32') {
+    ret = child_process.spawnSync('meteor.bat', args);
+  } else {
+    ret = child_process.spawnSync('meteor', args);
+  }
+  
   if (ret.status != 0) {
     var exc = new MeteorMongoException(ret.status, ret.stderr);
     exc.status = ret.status;
