@@ -27,10 +27,6 @@ function main() {
   var urlObj = url.parse(mUrl);
   var newArgs = buildArgs (args.command, args.commandArgs, urlObj);
 
-  if (process.platform === 'win32') {
-	  args.command.exec += '.bat';
-  }
-
   if (args.dryRun) {
     var fullCommand = shellQuote([args.command.exec].concat(newArgs));
     console.log(fullCommand);
