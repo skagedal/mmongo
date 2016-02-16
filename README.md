@@ -64,6 +64,10 @@ running it, use the "--dry" option as the very first argument to
 
 To get a reminder of the arguments, use `mmongo --help`.
 
+## Windows
+
+Add the MongoDB `bin` directory to your path. (If you installed with Choco, it's `C:\MongoDB\bin`.) Check by running `where mongo`. 
+
 ## Fork me
 
 https://github.com/skagedal/mmongo
